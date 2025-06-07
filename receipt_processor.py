@@ -9,7 +9,7 @@ import pdfplumber
 from typing import List, Dict, Any
 
 # Set your Google AI API key
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDWu2OWBFLRP3FGtplXDv7HhhAMOXYJTaU"
+os.environ["GOOGLE_API_KEY"] = "AIzaSyChUsanxgmwz_5G43NhdUnlJsxk6GyGoqw"
 
 class ReceiptProcessingTools:
     """Class containing tools for processing receipt PDFs and managing data"""
@@ -168,8 +168,8 @@ class ReceiptProcessingCrew:
             model="gemini-1.5-flash",
             temperature=0.1,
             convert_system_message_to_human=True,
-            request_timeout=60,
-            max_retries=3,
+            timeout=120,
+            max_retries=100,
         )
         
         # Set up tools and agents
@@ -193,7 +193,7 @@ class ReceiptProcessingCrew:
                 self.tools.save_json_data,
                 self.tools.list_pdf_files
             ],
-            max_iter=15
+            max_iter=300
         )
     
     def _create_aggregation_agent(self):
@@ -212,7 +212,7 @@ class ReceiptProcessingCrew:
                 self.tools.save_json_data,
                 self.tools.aggregate_data
             ],
-            max_iter=15
+            max_iter=300
         )
     
     def create_extraction_task(self, pdf_directory: str):
@@ -334,25 +334,28 @@ class ReceiptProcessingCrew:
         return sample_aggregated
 
 # Usage Example with better error handling
+
 def main():
-    """Main entry point for the receipt processing system"""
-    # Check for API key
     api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key or api_key == "your-google-api-key-here":
-        print("❌ Google API key not found!")
-        print("Please set your GOOGLE_API_KEY environment variable")
-        print("Get your key from: https://aistudio.google.com/app/apikey")
+    
+    if not api_key:
         api_key = input("Enter your Google API key now (or press Enter to use demo mode): ").strip()
-        
-        if not api_key:
-            print("🔄 Running in demo mode with sample data...")
-            return demo_mode()
+
+    if not api_key:
+        print("❌ API key not provided.")
+        print("🔄 Running in demo mode with sample data...")
+        return demo_mode()
     
     # Initialize and run the system
     try:
+        print("⚙️ Initializing ReceiptProcessingCrew...")
         processor = ReceiptProcessingCrew(google_api_key=api_key)
+        print("✅ Initialized.")
+
         pdf_directory = "./receipt_pdfs"
+        print("📂 Processing receipts from:", pdf_directory)
         result = processor.process_receipts(pdf_directory)
+
         
         print("\n" + "="*60)
         print("🎉 PROCESSING COMPLETE!")
